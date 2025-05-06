@@ -32,4 +32,4 @@ pnpm dev
 - Next.js
 - TypeScript
 - Turborepo
-- PNPM Workspaces 
+- PNPM Workspaces
