@@ -1,0 +1,37 @@
+{
+  "name": "b2c-store",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@8.15.4",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.0.0",
+    "@storybook/react": "^7.0.0",
+    "@types/node": "^20",
+    "eslint": "^8.0.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.0.0",
+    "prettier": "^3.0.0",
+    "turbo": "latest",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.5.0",
+    "supabase": "^2.22.6"
+  }
+}
