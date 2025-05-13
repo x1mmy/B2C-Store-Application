@@ -9,12 +9,15 @@ import Header from '../components/layout/header';
 import Footer from '../components/layout/footer';
 // import { useCart } from '../context/CartContext';
 
+// Define the Product interface
 interface Product {
-    id: number;
+    productId: string;
     name: string;
     price: number;
-    imageURL?: string;
-    category?: string;
+    imageURL: string;
+    category: string;
+    description: string;
+    stock: number;
 }
 
 export default function ProductsPage() {
@@ -100,7 +103,7 @@ export default function ProductsPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     {products.map((product) => (
-                        <ProductCard key={product.id} product={product} addToCart={() => {}} />
+                        <ProductCard key={product.productId} product={product} addToCart={() => {}} />
                     ))}
                 </div>
             </div>

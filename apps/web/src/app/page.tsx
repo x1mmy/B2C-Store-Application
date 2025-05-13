@@ -3,6 +3,7 @@ import supabase from "./configDB/supabaseConnect";
 import Header from "./components/layout/header";
 import Footer from "./components/layout/footer";
 import Hero from "./components/layout/hero";
+import { getProductUrl } from "./utils/urlHelpers";
 
 export default async function Home() {
   let { data: products, error } = await supabase
@@ -33,18 +34,21 @@ export default async function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {products.map((product) => (
                 <div key={product.productId} className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:scale-105">
-                  <a href={`/products/${product.id}`} className="block relative">
+                  <a href={getProductUrl(product)} className="block relative">
                     <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200">
-                      <img 
-                        key={`img-${product.productId}`}
-                        src={product.imageURL || "https://via.placeholder.com/300?text=MMA+Gear"} 
-                        alt={product.name}
-                        className="w-full h-64 object-cover"
-                      />
+                      <div className="relative w-full h-64">
+                        <Image 
+                          src={product.imageURL || "https://via.placeholder.com/300?text=MMA+Gear"} 
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover"
+                        />
+                      </div>
                     </div>
                   </a>
                   <div className="p-4">
-                    <a href={`/products/${product.id}`}>
+                    <a href={getProductUrl(product)}>
                       <h3 className="text-lg font-semibold text-gray-900 hover:text-red-600">{product.name}</h3>
                     </a>
                     <p className="mt-2 text-xl font-bold text-gray-900">${product.price?.toFixed(2)}</p>
