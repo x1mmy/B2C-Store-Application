@@ -23,7 +23,7 @@ interface ProductCardProps {
 // Define the ProductCard component
 const ProductCard: React.FC<ProductCardProps> = ({ product, addToCart }) => {
     const productUrl = getProductUrl(product);
-    const imageUrl = getImageUrl(product.imageURL);
+    // const imageUrl = getImageUrl(product.imageURL);
     
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:scale-105">
@@ -31,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, addToCart }) => {
                 <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200">
                     <div className="relative w-full h-64">
                         <Image 
-                            src={imageUrl}
+                            src={product.imageURL}
                             alt={product.name}
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

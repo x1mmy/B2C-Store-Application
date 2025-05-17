@@ -45,9 +45,11 @@ export default function ProductsPage() {
 
                 // Fetch unique categories
                 const { data: categoriesData, error: categoriesError } = await supabase
-                    .from('products')
-                    .select('category')
-                    .not('category', 'is', null);
+                  .from('products')
+                  .select('category')
+                
+
+                    
 
                 if (categoriesError) {
                     console.error('Error fetching categories:', categoriesError);
@@ -69,13 +71,6 @@ export default function ProductsPage() {
     if (loading) {
         return <div>Loading...</div>;
     }
-
-    // // Generate an array of page numbers
-    // const pageNumbers = [];
-    // for (let i = 1; i <= totalPages; i++) {
-    //     pageNumbers.push(i);
-    // }
-    
 
     return (
 
