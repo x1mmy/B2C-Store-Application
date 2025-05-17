@@ -25,26 +25,7 @@ export default function Header({ cartItemCount = 0 }) {
             </Link>
           </div>
           
-          {/* Search Bar */}
-          <div className="hidden md:block flex-1 max-w-lg mx-8">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button 
-                type="submit" 
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-red-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            </form>
-          </div>
+          
           
           {/* Navigation */}
           <nav className="flex space-x-8 items-center">
@@ -73,14 +54,20 @@ export default function Header({ cartItemCount = 0 }) {
                 </span>
               )}
             </Link>
-            <Link 
-              href="/account" 
-              className="text-gray-600 hover:text-red-600"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <Link 
+                href="/auth/login" 
+                className="text-gray-600 hover:text-red-600 font-medium"
+              >
+                Login
+              </Link>
+              <Link 
+                href="/auth/register" 
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors font-medium"
+              >
+                Register
+              </Link>
+            </div>
           </nav>
         </div>
         
