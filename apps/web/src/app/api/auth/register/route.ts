@@ -8,24 +8,51 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import supabase from '../../../configDB/supabaseConnect';
-import bcrypt from 'bcrypt';
 
 export async function POST(request: NextRequest) {
-    const { email, password } = await request.json();
+    try {
+        const { email, password } = await request.json();
+        
+        // Validate input
+        if (!email || !password) {
+            return NextResponse.json(
+                { error: "Email and password are required" },
+                { status: 400 }
+            );
+        }
+        
+        // Minimum password requirements check
+        if (password.length < 6) {
+            return NextResponse.json(
+                { error: "Password must be at least 6 characters long" },
+                { status: 400 }
+            );
+        }
 
-        // hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // create a new user in the users table
-        const { data: userData, error: userError } = await supabase.from('users').insert({
+        console.log(`Attempting to register user with email: ${email}`);
+        
+        // Create a new user using the supabase auth
+        const { data: userData, error: userError } = await supabase.auth.signUp({
             email: email,
-            password: hashedPassword,
+            password: password,
         });
 
         if (userError) {
-            return NextResponse.json({ error: userError.message }, { status: 401 });
+            console.error('Supabase auth error:', userError);
+            return NextResponse.json(
+                { error: userError.message },
+                { status: 401 }
+            );
         }
 
-        return NextResponse.json({ data: userData }, { status: 200 });
+        console.log('User registration successful:', userData);
+        return NextResponse.json({ success: true, data: userData }, { status: 200 });
+    } catch (error) {
+        console.error('Registration error:', error);
+        return NextResponse.json(
+            { error: "An unexpected error occurred during registration" },
+            { status: 500 }
+        );
+    }
 }
 

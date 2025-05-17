@@ -11,12 +11,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setErrorCode('');
 
     try {
       console.log('Login attempt:', { email, password });
@@ -27,10 +29,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         router.push('/');
       } else {
-        setError('Failed to login. Please check your credentials.');
+        // Set the specific error message from the API
+        setError(data.error || 'Failed to login. Please check your credentials.');
+        setErrorCode(data.code || '');
       }
     } catch (err) {
       setError('Failed to login. Please check your credentials.');
@@ -68,6 +74,12 @@ export default function LoginPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700">{error}</p>
+                  {errorCode === 'email_not_confirmed' && (
+                    <p className="text-sm text-red-700 mt-1">
+                      Please check your email inbox and click the verification link to activate your account.
+
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

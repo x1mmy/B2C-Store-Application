@@ -20,12 +20,14 @@ export default function RegisterPage() {
 
     const [isLoading, setIsLoading] = useState(false); // loading state
     const [error, setError] = useState(''); // error state
+    const [successMessage, setSuccessMessage] = useState(''); // success message state
     const router = useRouter(); // router
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
+        setSuccessMessage('');
 
         // Validate form
         if (password !== confirmPassword) {
@@ -34,24 +36,42 @@ export default function RegisterPage() {
             return;
         }
 
+        // Check password length
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters long');
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            // This is frontend only for now, we'll just simulate a successful registration
             console.log('Registration attempt:', { email, password });
 
             // send the data to the backend
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({ email, password }),
             });
 
+            const data = await response.json();
+
             if (response.ok) {
-                router.push('/auth/login');
+                setSuccessMessage(`Registration successful! Please check your email (${email}) to verify your account.`);
+                // Delay redirect to login page to show the success message
+                setTimeout(() => {
+                    router.push('/auth/login');
+                }, 10000); // 10 seconds
             } else {
-                setError('Failed to register. Please try again.');
+                setError(data.error || 'Failed to register. Please try again.');
+                console.error('Registration failed:', data);
             }
         } catch (err) {
             setError('Failed to register. Please try again.');
             console.error('Registration error:', err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -84,6 +104,22 @@ export default function RegisterPage() {
                                 </div>
                                 <div className="ml-3">
                                     <p className="text-sm text-red-700">{error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Success message */}
+                    {successMessage && (
+                        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-green-700">{successMessage}</p>
                                 </div>
                             </div>
                         </div>

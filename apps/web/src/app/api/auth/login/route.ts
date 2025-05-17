@@ -7,28 +7,62 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import supabase from '../../../configDB/supabaseConnect';
-import bcrypt from 'bcrypt';
+
 
 
 
 export async function POST(request: NextRequest) {
-    // get the email and password from the request
-    const { email, password } = await request.json();
+    try {
+        // get the email and password from the request
+        const { email, password } = await request.json();
 
-    // hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+        if (!email || !password) {
+            console.error('Login attempt failed: Missing email or password');
+            return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+        }
 
-    // sign in the user comapring it against the users table  
-    const { data, error } = await supabase
-        .from('users') // from the user table
-        .select('*') // select all columns
-        .eq('email', email) // is equal to the email column
-        .eq('password', hashedPassword); // is equal to the password column
+        console.log(`Login attempt for email: ${email}`);
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 401 });
+        // sign in the user with the supabase auth 
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (error) {
+            console.error('Supabase auth error:', error.message, 'Error code:', error.code);
+            
+            // Provide more specific error messages based on error type
+            if (error.message.includes('Invalid login credentials')) {
+                return NextResponse.json({ 
+                    error: 'Invalid email or password',
+                    details: error.message,
+                    code: error.code
+                }, { status: 401 });
+            }
+            
+            if (error.code === 'email_not_confirmed') {
+                return NextResponse.json({ 
+                    error: 'Please verify your email address before logging in',
+                    details: 'Email not confirmed',
+                    code: error.code
+                }, { status: 401 });
+            }
+            
+            return NextResponse.json({ 
+                error: error.message,
+                details: error.code,
+                timestamp: new Date().toISOString()
+            }, { status: 401 });
+        }
+        
+        console.log('Login successful for user:', data.user?.id);
+        return NextResponse.json({ data }, { status: 200 });
+    } catch (e) {
+        console.error('Unexpected error in login route:', e);
+        return NextResponse.json({ 
+            error: 'Server error processing login request',
+            details: e instanceof Error ? e.message : 'Unknown error'
+        }, { status: 500 });
     }
-    
-
-    return NextResponse.json({ data }, { status: 200 });
 }
