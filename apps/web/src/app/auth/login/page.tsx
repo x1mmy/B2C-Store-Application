@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Header from '../../components/layout/header';
-import Footer from '../../components/layout/footer';
+// import Header from '../../components/layout/header';
+// import Footer from '../../components/layout/footer';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -48,7 +48,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      {/* <Header /> */}
       
       <main className="flex-grow flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
@@ -138,7 +138,7 @@ export default function LoginPage() {
         </div>
       </main>
       
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 } 

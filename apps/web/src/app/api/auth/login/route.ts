@@ -4,12 +4,11 @@
 
 // - will use supabase auth to login the user
 // - as well as check against the users table to see if the user is valid
+// - will create a user session token
 
 import { NextRequest, NextResponse } from 'next/server';
 import supabase from '../../../configDB/supabaseConnect';
-
-
-
+import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
     try {
@@ -56,8 +55,54 @@ export async function POST(request: NextRequest) {
             }, { status: 401 });
         }
         
+        // If login was successful, set the session cookies
+        if (data?.session) {
+            // Create a response object first
+            const response = NextResponse.json({ 
+                message: 'Login successful',
+                user: {
+                    id: data.user?.id,
+                    email: data.user?.email
+                }
+            }, { status: 200 });
+            
+            // TODO: EXPLAIN THIS
+            //Set the cookies on the response object
+            response.cookies.set('sb-access-token', data.session.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: data.session.expires_in
+            });
+            
+            response.cookies.set('sb-refresh-token', data.session.refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 30 // 30 days
+            });
+            
+            response.cookies.set('sb-auth-state', 'authenticated', {
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: data.session.expires_in
+            });
+            
+            console.log('Login successful for user:', data.user?.id);
+            return response;
+        }
+        
         console.log('Login successful for user:', data.user?.id);
-        return NextResponse.json({ data }, { status: 200 });
+        return NextResponse.json({ 
+            message: 'Login successful',
+            user: {
+                id: data.user?.id,
+                email: data.user?.email
+            }
+        }, { status: 200 });
     } catch (e) {
         console.error('Unexpected error in login route:', e);
         return NextResponse.json({ 

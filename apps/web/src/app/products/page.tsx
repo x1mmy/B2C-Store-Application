@@ -5,8 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import supabase from '../configDB/supabaseConnect';
 import ProductCard from '../components/productCard';
-import Header from '../components/layout/header';
-import Footer from '../components/layout/footer';
+// import Header from '../components/layout/header';
+// import Footer from '../components/layout/footer';
 // import { useCart } from '../context/CartContext';
 
 // Define the Product interface
@@ -75,7 +75,7 @@ export default function ProductsPage() {
     return (
 
         <div className="min-h-screen bg-gray-50">
-            <Header />
+            {/* <Header /> */}
             {/* Header Section */}
             <div className="bg-black py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -102,7 +102,7 @@ export default function ProductsPage() {
                     ))}
                 </div>
             </div>
-            <Footer />
+            {/* <Footer /> */}
         </div>
     );
 }
