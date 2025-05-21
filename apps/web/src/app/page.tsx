@@ -1,7 +1,7 @@
 import Image from "next/image";
 import supabase from "./configDB/supabaseConnect";
-import Header from "./components/layout/header";
-import Footer from "./components/layout/footer";
+  // import Header from "./components/layout/header";
+  // import Footer from "./components/layout/footer";
 import Hero from "./components/layout/hero";
 import { getProductUrl } from "./utils/urlHelpers";
 
@@ -17,7 +17,7 @@ export default async function Home() {
   
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      {/* <Header /> */}
       
       {/* Hero Section */}
       <Hero />
@@ -204,7 +204,7 @@ export default async function Home() {
         </div>
       </section>
       
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }
