@@ -57,6 +57,8 @@ export async function POST(request: NextRequest) {
         
         // If login was successful, set the session cookies
         if (data?.session) {
+            console.log('Setting session cookies with token:', data.session.access_token.substring(0, 10) + '...');
+            
             // Create a response object first
             const response = NextResponse.json({ 
                 message: 'Login successful',
@@ -66,43 +68,55 @@ export async function POST(request: NextRequest) {
                 }
             }, { status: 200 });
             
-            // TODO: EXPLAIN THIS
-            //Set the cookies on the response object
+            // Set the cookies on the response object
+            // Use secure settings but ensure cookies work in development
+            const secure = process.env.NODE_ENV === 'production';
+            const expirySeconds = data.session.expires_in;
+            
+            // Set the access token cookie (HTTP only for security)
             response.cookies.set('sb-access-token', data.session.access_token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: secure,
                 sameSite: 'lax',
                 path: '/',
-                maxAge: data.session.expires_in
+                maxAge: expirySeconds
             });
             
+            // Set the refresh token cookie (HTTP only for security) - extended lifetime
             response.cookies.set('sb-refresh-token', data.session.refresh_token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: secure,
                 sameSite: 'lax',
                 path: '/',
-                maxAge: 60 * 60 * 24 * 30 // 30 days
+                maxAge: 60 * 60 * 24 * 30 // 30 days for refresh token
             });
             
+            // Set an auth state cookie (visible to JavaScript for UI state) - extended lifetime
             response.cookies.set('sb-auth-state', 'authenticated', {
-                secure: process.env.NODE_ENV === 'production',
+                httpOnly: false, // Visible to client JS
+                secure: secure,
                 sameSite: 'lax',
                 path: '/',
-                maxAge: data.session.expires_in
+                maxAge: 60 * 60 * 24 * 30 // 30 days to match refresh token
             });
+            
+            // Set cache control headers to prevent caching of this response
+            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            response.headers.set('Pragma', 'no-cache');
+            response.headers.set('Expires', '0');
             
             console.log('Login successful for user:', data.user?.id);
+            console.log('Session expires in:', expirySeconds, 'seconds');
+            console.log('Cookies set with extended expiry (30 days)');
+            
             return response;
         }
         
-        console.log('Login successful for user:', data.user?.id);
+        // This should not happen, but just in case
+        console.error('Login succeeded but no session was created!');
         return NextResponse.json({ 
-            message: 'Login successful',
-            user: {
-                id: data.user?.id,
-                email: data.user?.email
-            }
-        }, { status: 200 });
+            error: 'Authentication succeeded but session creation failed',
+        }, { status: 500 });
     } catch (e) {
         console.error('Unexpected error in login route:', e);
         return NextResponse.json({ 

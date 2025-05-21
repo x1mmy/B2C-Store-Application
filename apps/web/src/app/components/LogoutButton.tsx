@@ -2,30 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
 
 export default function LogoutButton() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        // Redirect to login page
-        router.push('/auth/login');
-        // Force a refresh to clear client-side state
-        router.refresh();
-      } else {
-        console.error('Logout failed');
-      }
+      await logout();
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
