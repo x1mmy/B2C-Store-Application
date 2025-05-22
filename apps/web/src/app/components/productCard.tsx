@@ -62,6 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             className="object-cover"
+                            unoptimized={true} // this is to prevent next js from optimizing the image
                         />
                     </div>
                 </div>
