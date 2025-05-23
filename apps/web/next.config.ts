@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
       'randomuser.me', // For testimonial images
       'cyihruftnrlpdcjhochq.supabase.co', // The Supabase project URL
       'engageind.com', // Temporarily keep this until images are migrated
-      'budofightgear.com.au' // Another external image source
+      'budofightgear.com.au', // Another external image source
+      'boxraw.com' // For boxraw product images
     ],
   }
 };
