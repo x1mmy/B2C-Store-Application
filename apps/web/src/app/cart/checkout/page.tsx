@@ -2,12 +2,12 @@ import { requireAuth } from '../../utils/auth';
 import Link from 'next/link';
 import { useCart } from '../../context/cartContext';
 
-export default async function IndexPage({ searchParams }: { searchParams: { canceled: string } }) {
+export default async function IndexPage({ searchParams }: { searchParams: Promise<{ canceled: string }> }) {
     const { canceled } = await searchParams
   
     if (canceled) {
       console.log(
-        'Order canceled -- continue to shop around and checkout when you’re ready.'
+        'Order canceled -- continue to shop around and checkout when you\'re ready.'
       )
     }
     return (

@@ -1,24 +1,19 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '../context/cartContext';
 import CheckoutButton from './CheckoutButton';
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 /**
- * CartPage component displays the user's shopping cart with products from Supabase
- * It provides functionality to:
- * - View all cart items with their details from Supabase
- * - Update item quantities
- * - Remove items from cart
- * - See order summary with subtotal, tax, and total
- * - Proceed to checkout
- * 
- * This page is protected by middleware - unauthorized users are redirected to login
+ * CartContent component that uses useSearchParams
  */
-export default function CartPage() {
+function CartContent() {
     // Access cart state and functions from the cart context
     const { cart, removeFromCart, updateQuantity, getCartTotal } = useCart();
     // Router for redirecting if needed
@@ -188,5 +183,24 @@ export default function CartPage() {
             </div>
         )}
         </div>
+    );
+}
+
+/**
+ * CartPage component displays the user's shopping cart with products from Supabase
+ * It provides functionality to:
+ * - View all cart items with their details from Supabase
+ * - Update item quantities
+ * - Remove items from cart
+ * - See order summary with subtotal, tax, and total
+ * - Proceed to checkout
+ * 
+ * This page is protected by middleware - unauthorized users are redirected to login
+ */
+export default function CartPage() {
+    return (
+        <Suspense fallback={<div className="container mx-auto px-4 py-8 text-center">Loading cart...</div>}>
+            <CartContent />
+        </Suspense>
     );
 }

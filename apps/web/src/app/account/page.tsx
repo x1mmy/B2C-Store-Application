@@ -2,6 +2,9 @@ import { requireAuth } from '../utils/auth';
 import LogoutButton from '../components/LogoutButton';
 import Link from 'next/link';
 
+// Force dynamic rendering for this page since it uses cookies
+export const dynamic = 'force-dynamic';
+
 export default async function AccountPage() {
   // This will redirect to login if user is not authenticated
   const session = await requireAuth();

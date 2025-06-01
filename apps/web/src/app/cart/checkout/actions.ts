@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache';
  * This should be called during checkout when needed
  */
 export async function clearAuthCookies() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   // Delete all authentication cookies
   cookieStore.delete('sb-access-token');
@@ -26,7 +26,7 @@ export async function clearAuthCookies() {
  * during the checkout process
  */
 export async function setAuthCookie(name: string, value: string, options: any = {}) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   cookieStore.set(name, value, {
     httpOnly: true,
@@ -46,7 +46,7 @@ export async function setAuthCookie(name: string, value: string, options: any = 
  * Server action to refresh the session during checkout
  */
 export async function refreshCheckoutSession(accessToken: string, refreshToken: string) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   // Set authentication cookies
   cookieStore.set('sb-access-token', accessToken, {

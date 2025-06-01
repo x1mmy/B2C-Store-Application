@@ -9,9 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2
@@ -21,7 +18,7 @@ jobs:
         name: Validate pnpm Installation
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
           cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile
       # - run: pnpm lint  # Temporarily disabled while fixing linting issues

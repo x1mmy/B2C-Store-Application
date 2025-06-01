@@ -48,8 +48,9 @@ async function fetchCategories() {
   return categories;
 }
 
-export default async function EditProductPage({ params }: { params: { productId: string } }) {
-  const product = await fetchProduct(params.productId);
+export default async function EditProductPage({ params }: { params: Promise<{ productId: string }> }) {
+  const { productId } = await params;
+  const product = await fetchProduct(productId);
   const categories = await fetchCategories();
   
   if (!product) {

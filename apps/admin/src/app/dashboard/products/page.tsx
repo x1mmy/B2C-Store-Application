@@ -30,7 +30,7 @@ async function fetchProducts() {
 }
 
 // Function to fetch unique categories
-export async function fetchCategories() {
+async function fetchCategories() {
   const { data, error } = await supabase
     .from('products')
     .select('category')
@@ -76,8 +76,8 @@ function ProductsLoading() {
 
 // Products List Component
 async function ProductsList({ searchParams }: { searchParams: { search?: string; category?: string } }) {
-  const searchTerm = await searchParams?.search || '';
-  const categoryFilter = await searchParams?.category || '';
+  const searchTerm = searchParams?.search || '';
+  const categoryFilter = searchParams?.category || '';
   
   const products = await fetchProducts();
   
@@ -158,8 +158,9 @@ async function ProductsList({ searchParams }: { searchParams: { search?: string;
   );
 }
 
-export default async function ProductsPage({ searchParams }: { searchParams: { search?: string; category?: string } }) {
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ search?: string; category?: string }> }) {
   const categories = await fetchCategories();
+  const resolvedSearchParams = await searchParams;
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -176,10 +177,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: { s
         </Link>
       </div>
       
-      <ProductsFilter categories={categories} searchParams={searchParams} />
+      <ProductsFilter categories={categories} searchParams={resolvedSearchParams} />
       
       <Suspense fallback={<ProductsLoading />}>
-        <ProductsList searchParams={searchParams} />
+        <ProductsList searchParams={resolvedSearchParams} />
       </Suspense>
     </div>
   );

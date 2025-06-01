@@ -241,7 +241,7 @@ async function OrdersList() {
                             </span>
                           </div>
                           <div className="text-gray-600 font-medium">
-                            Qty: {item.quantity} × ${item.price.toFixed(2)} = ${(item.quantity * item.price).toFixed(2)}
+                            Qty: {item.quantity} × ${(item.product?.price || (item.price / item.quantity)).toFixed(2)} = ${item.price.toFixed(2)}
                           </div>
                         </div>
                       ))}

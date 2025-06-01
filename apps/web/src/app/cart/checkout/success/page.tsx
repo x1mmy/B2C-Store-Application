@@ -20,8 +20,8 @@ interface OrderResponse {
   error?: string;
 }
 
-export default async function Success({ searchParams }: { searchParams: { session_id: string } }) {
-  const { session_id } =  await searchParams
+export default async function Success({ searchParams }: { searchParams: Promise<{ session_id: string }> }) {
+  const { session_id } = await searchParams
 
   if (!session_id) {
     return redirect('/cart')
