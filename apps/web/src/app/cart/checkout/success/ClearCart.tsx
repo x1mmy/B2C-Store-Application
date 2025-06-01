@@ -10,7 +10,9 @@ export default function ClearCart() {
   useEffect(() => {
     // Only clear the cart once to prevent infinite rerenders
     if (!hasCleared.current) {
+      // Clear the cart from client-side state (localStorage)
       clearCart();
+      
       hasCleared.current = true;
     }
   }, [clearCart]);

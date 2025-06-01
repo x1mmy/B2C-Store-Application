@@ -17,6 +17,9 @@ export async function POST(request: Request) {
           product_data: {
             name: item.name,
             images: item.image ? [item.image] : [],
+            metadata: {
+              productId: item.id // Store the Supabase product ID in metadata
+            }
           },
           unit_amount: Math.round(item.price * 100), // Round to ensure integer values
         },

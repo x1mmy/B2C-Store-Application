@@ -1,6 +1,12 @@
+'use server';
+
 import supabase from '../configDB/supabaseConnect';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+
+// Global variable to track ongoing refresh attempts
+let refreshPromise: Promise<any> | null = null;
+let refreshTimeout: NodeJS.Timeout | null = null;
 
 /**
  * Gets the current user session if it exists
@@ -57,50 +63,60 @@ export async function getSession() {
     if (refreshToken) {
       try {
         console.log('Attempting to refresh token...');
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
-          refresh_token: refreshToken,
-        });
         
-        if (refreshError || !refreshData.session) {
-          console.error('Failed to refresh session:', refreshError?.message);
-          
-          // Clear cookies on refresh failure
-          cookieStore.delete('sb-access-token');
-          cookieStore.delete('sb-refresh-token');
-          cookieStore.delete('sb-auth-state');
-          
-          return null;
+        // Check if there's already a refresh in progress
+        if (refreshPromise) {
+          console.log('Refresh already in progress, waiting for result...');
+          try {
+            const result = await Promise.race([
+              refreshPromise,
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Refresh timeout')), 10000)
+              )
+            ]);
+            return result;
+          } catch (timeoutError) {
+            console.log('Refresh promise timed out, clearing and retrying...');
+            refreshPromise = null;
+            if (refreshTimeout) {
+              clearTimeout(refreshTimeout);
+              refreshTimeout = null;
+            }
+          }
         }
         
-        // Session refreshed successfully, set new cookies
-        cookieStore.set('sb-access-token', refreshData.session.access_token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: refreshData.session.expires_in
-        });
+        // Start a new refresh operation
+        refreshPromise = performTokenRefresh(refreshToken, cookieStore);
         
-        cookieStore.set('sb-refresh-token', refreshData.session.refresh_token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 30 // 30 days
-        });
+        // Set a timeout to clear the promise after 15 seconds
+        refreshTimeout = setTimeout(() => {
+          console.log('Clearing refresh promise due to timeout');
+          refreshPromise = null;
+          refreshTimeout = null;
+        }, 15000);
         
-        // Return the refreshed user data
-        return {
-          user: refreshData.user,
-          isAuthenticated: true,
-        };
+        const result = await refreshPromise;
+        
+        // Clear the promise and timeout after completion
+        refreshPromise = null;
+        if (refreshTimeout) {
+          clearTimeout(refreshTimeout);
+          refreshTimeout = null;
+        }
+        
+        return result;
       } catch (refreshErr) {
         console.error('Error during token refresh:', refreshErr);
         
-        // Clear all cookies
-        cookieStore.delete('sb-access-token');
-        cookieStore.delete('sb-refresh-token');
-        cookieStore.delete('sb-auth-state');
+        // Clear the refresh promise and timeout on error
+        refreshPromise = null;
+        if (refreshTimeout) {
+          clearTimeout(refreshTimeout);
+          refreshTimeout = null;
+        }
+        
+        // Only clear cookies for definitive auth failures, not temporary server action issues
+        console.log('Token refresh error, but keeping cookies (may be temporary server action issue)');
         
         return null;
       }
@@ -113,6 +129,64 @@ export async function getSession() {
     console.error('Error getting session:', error);
     return null;
   }
+}
+
+/**
+ * Performs the actual token refresh operation
+ */
+async function performTokenRefresh(refreshToken: string, cookieStore: any) {
+  const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+    refresh_token: refreshToken,
+  });
+  
+  if (refreshError || !refreshData.session) {
+    console.error('Failed to refresh session:', refreshError?.message);
+    
+    // Handle specific "Already Used" error more gracefully
+    if (refreshError?.message?.includes('Already Used')) {
+      console.log('Refresh token already used - this is likely due to concurrent requests');
+      // Don't clear cookies immediately for this error as it might be a race condition
+      return null;
+    }
+    
+    // Only clear cookies if there's a definitive auth failure (invalid refresh token)
+    // Don't clear cookies for temporary issues during server actions
+    if (refreshError?.message?.includes('Invalid refresh token') || 
+        refreshError?.message?.includes('expired') ||
+        refreshError?.message?.includes('malformed')) {
+      console.log('Clearing cookies due to invalid/expired refresh token');
+      cookieStore.delete('sb-access-token');
+      cookieStore.delete('sb-refresh-token');
+      cookieStore.delete('sb-auth-state');
+    } else {
+      console.log('Refresh failed but keeping cookies (may be temporary server action issue)');
+    }
+    
+    return null;
+  }
+  
+  // Session refreshed successfully, set new cookies
+  cookieStore.set('sb-access-token', refreshData.session.access_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: refreshData.session.expires_in
+  });
+  
+  cookieStore.set('sb-refresh-token', refreshData.session.refresh_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30 // 30 days
+  });
+  
+  // Return the refreshed user data
+  return {
+    user: refreshData.user,
+    isAuthenticated: true,
+  };
 }
 
 /**
