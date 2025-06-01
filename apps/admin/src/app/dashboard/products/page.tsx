@@ -76,8 +76,8 @@ function ProductsLoading() {
 
 // Products List Component
 async function ProductsList({ searchParams }: { searchParams: { search?: string; category?: string } }) {
-  const searchTerm = searchParams?.search || '';
-  const categoryFilter = searchParams?.category || '';
+  const searchTerm = await searchParams?.search || '';
+  const categoryFilter = await searchParams?.category || '';
   
   const products = await fetchProducts();
   

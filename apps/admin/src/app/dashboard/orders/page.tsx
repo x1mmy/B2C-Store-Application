@@ -9,6 +9,12 @@ interface OrderItem {
   productId: string;
   quantity: number;
   price: number;
+  product?: {
+    productId: string;
+    name: string;
+    price: number;
+    imageURL: string;
+  };
 }
 
 // Interface for Order
@@ -18,54 +24,114 @@ interface Order {
   orderNumber: string;
   total: number;
   status: string;
-  created_at?: string;
   order_items?: OrderItem[];
   user?: {
+    id: string;
     email: string;
   };
 }
 
 // Function to fetch orders
 async function fetchOrders() {
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items(*),
-      user:userId(email)
-    `)
-    .order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching orders:', error);
+  try {
+    // First, fetch all orders with order items
+    const { data: orders, error: ordersError } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items(*)
+      `)
+      .order('orderNumber', { ascending: false });
+    
+    if (ordersError) {
+      console.error('Error fetching orders:', ordersError);
+      return [];
+    }
+
+    if (!orders || orders.length === 0) {
+      return [];
+    }
+
+    // Get all unique user IDs from orders
+    const userIds = [...new Set(orders.map(order => order.userId))];
+    
+    // Fetch user information using Auth Admin API
+    let users: any[] = [];
+    if (userIds.length > 0) {
+      try {
+        // Use the auth admin API to get user details
+        const userPromises = userIds.map(async (userId) => {
+          try {
+            const { data, error } = await supabase.auth.admin.getUserById(userId);
+            if (error) {
+              console.error(`Error fetching user ${userId}:`, error);
+              return {
+                id: userId,
+                email: `User-${userId.substring(0, 8)}`
+              };
+            }
+            return {
+              id: data.user.id,
+              email: data.user.email || `User-${userId.substring(0, 8)}`
+            };
+          } catch (err) {
+            console.error(`Exception fetching user ${userId}:`, err);
+            return {
+              id: userId,
+              email: `User-${userId.substring(0, 8)}`
+            };
+          }
+        });
+
+        users = await Promise.all(userPromises);
+      } catch (error) {
+        console.error('Error with auth admin API:', error);
+        // Fallback to user IDs
+        users = userIds.map(userId => ({
+          id: userId,
+          email: `User-${userId.substring(0, 8)}`
+        }));
+      }
+    }
+
+    // Get all unique product IDs from order items
+    const allOrderItems = orders.flatMap(order => order.order_items || []);
+    const productIds = [...new Set(allOrderItems.map(item => item.productId))];
+    
+    // Fetch product information
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('productId, name, price, imageURL')
+      .in('productId', productIds);
+
+    if (productsError) {
+      console.error('Error fetching products:', productsError);
+    }
+
+    // Combine the data
+    const ordersWithDetails = orders.map(order => ({
+      ...order,
+      user: users?.find(user => user.id === order.userId) || null,
+      order_items: order.order_items?.map((item: any) => ({
+        ...item,
+        product: products?.find(product => product.productId === item.productId) || null
+      })) || []
+    }));
+
+    return ordersWithDetails;
+  } catch (error) {
+    console.error('Unexpected error fetching orders:', error);
     return [];
   }
-  
-  return orders || [];
 }
 
 // Order Status Badge Component
 function OrderStatusBadge({ status }: { status: string }) {
   let colorClass = '';
   
-  switch (status.toLowerCase()) {
-    case 'pending':
-      colorClass = 'bg-yellow-100 text-yellow-800';
-      break;
-    case 'processing':
-      colorClass = 'bg-blue-100 text-blue-800';
-      break;
-    case 'shipped':
-      colorClass = 'bg-purple-100 text-purple-800';
-      break;
-    case 'delivered':
-      colorClass = 'bg-green-100 text-green-800';
-      break;
-    case 'cancelled':
-      colorClass = 'bg-red-100 text-red-800';
-      break;
+  switch (status) {
     default:
-      colorClass = 'bg-gray-100 text-gray-800';
+      colorClass = 'bg-green-100 text-black';
   }
   
   return (
@@ -106,30 +172,30 @@ async function OrdersList() {
   const orders = await fetchOrders();
   
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+    <div className="bg-gray-50 overflow-hidden sm:rounded-md">
       {orders.length === 0 ? (
-        <div className="p-6 text-center">
+        <div className="p-6 text-center bg-white rounded-lg">
           <p className="text-gray-500">No orders found.</p>
         </div>
       ) : (
-        <ul className="divide-y divide-gray-200">
+        <div className="space-y-6 p-4">
           {orders.map((order: Order) => (
-            <li key={order.orderId}>
-              <div className="px-4 py-4 sm:px-6">
+            <div key={order.orderId} className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-6">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col sm:flex-row sm:items-center">
                     <p className="text-sm font-medium text-indigo-600 truncate mr-4">
-                      Order #{order.orderNumber?.substring(0, 8)}
+                      Order #{order.orderId?.substring(0, 8)}
                     </p>
-                    <p className="flex-shrink-0 text-sm text-gray-500">
-                      {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
-                    </p>
+                    {/* <p className="flex-shrink-0 text-sm text-gray-500">
+                      Status: {order.status.toUpperCase()}
+                    </p> */}
                   </div>
                   <div className="ml-2 flex-shrink-0 flex">
-                    <OrderStatusBadge status={order.status} />
+                    <OrderStatusBadge status={order.status.toUpperCase()} />
                   </div>
                 </div>
-                <div className="mt-2 sm:flex sm:justify-between">
+                <div className="mt-4 sm:flex sm:justify-between">
                   <div className="sm:flex">
                     <p className="flex items-center text-sm text-gray-500">
                       <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,24 +212,52 @@ async function OrdersList() {
                   </div>
                   <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                     <p className="font-medium text-gray-900">${order.total?.toFixed(2)}</p>
-                    <Link
+                    {/* <Link
                       href={`/dashboard/orders/${order.orderId}`}
                       className="ml-4 inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
                     >
                       View Details
-                    </Link>
+                    </Link> */}
                   </div>
                 </div>
+                
+                {/* Product Details */}
+                {order.order_items && order.order_items.length > 0 && (
+                  <div className="mt-6 border-t border-gray-200 pt-6">
+                    <h4 className="text-sm font-medium text-gray-900 mb-4">Products:</h4>
+                    <div className="space-y-3">
+                      {order.order_items.map((item: OrderItem) => (
+                        <div key={item.orderItemsId} className="flex justify-between items-center text-sm bg-gray-50 p-3 rounded-md">
+                          <div className="flex items-center">
+                            {item.product?.imageURL && (
+                              <img 
+                                src={item.product.imageURL} 
+                                alt={item.product.name || 'Product'} 
+                                className="w-10 h-10 object-cover rounded mr-3"
+                              />
+                            )}
+                            <span className="text-gray-700 font-medium">
+                              {item.product?.name || `Product ID: ${item.productId}`}
+                            </span>
+                          </div>
+                          <div className="text-gray-600 font-medium">
+                            Qty: {item.quantity} × ${item.price.toFixed(2)} = ${(item.quantity * item.price).toFixed(2)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
 }
 
-export default function OrdersPage() {
+export default async function OrdersPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -190,7 +284,7 @@ export default function OrdersPage() {
             </div>
           </div>
           <div className="flex space-x-2">
-            <select
+            {/* <select
               id="status"
               name="status"
               className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
@@ -201,11 +295,11 @@ export default function OrdersPage() {
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
-            </select>
+            </select> */}
             <select
               id="sort"
               name="sort"
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-black"
             >
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
