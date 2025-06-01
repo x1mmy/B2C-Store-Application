@@ -48,11 +48,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const router = useRouter();
 
   // Function to refresh the session from the API
   const refreshSession = async (): Promise<boolean> => {
+    // Prevent concurrent refresh attempts
+    if (isRefreshing) {
+      console.log("Refresh already in progress, skipping...");
+      return false;
+    }
+
     try {
+      setIsRefreshing(true);
       console.log("Refreshing session from API...");
       
       const response = await fetch('/api/auth/refresh', {
@@ -71,6 +79,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("Error refreshing session:", error);
       return false;
+    } finally {
+      setIsRefreshing(false);
     }
   };
 

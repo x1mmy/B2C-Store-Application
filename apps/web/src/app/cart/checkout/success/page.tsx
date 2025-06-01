@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+import { cookies } from 'next/headers'
 
 import { stripe } from '../../../configDB/stripe'
 import { getUserId, getSessionWithToken } from '../../../utils/auth'
@@ -27,9 +27,13 @@ export default async function Success({ searchParams }: { searchParams: { sessio
     return redirect('/cart')
   }
 
+  let orderCreated = false;
+  let orderId: string | null = null;
+  let orderNumber: string | null = null;
+
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id, {
-      expand: ['line_items', 'payment_intent']
+      expand: ['line_items', 'line_items.data.price.product']
     })
 
     const customerEmail = session.customer_details?.email || ''
@@ -44,20 +48,32 @@ export default async function Success({ searchParams }: { searchParams: { sessio
       const userId = userSession?.user?.id;
       
       if (userId && session.line_items?.data) {
-        // Format order items for database insertion
-        const orderItems = session.line_items.data.map(item => {
-          const productId = item.price?.product as string
+        // Extract cart data from Stripe session metadata
+        const cartItems = session.line_items.data.map(item => {
+          const product = item.price?.product as any;
           return {
-            productId,
-            quantity: item.quantity || 1,
-            price: (item.amount_total || 0) / 100 // Convert from cents to dollars
+            productId: product?.metadata?.productId || product?.id, // Use metadata productId or fallback to Stripe product ID
+            name: product?.name || 'Unknown Product',
+            price: (item.amount_total || 0) / 100, // Convert from cents to dollars
+            quantity: item.quantity || 1
           }
         })
         
-        let orderId: string | null = null;
+        console.log('Cart items extracted from Stripe session:', cartItems);
         
-        // First try using the API
+        // Generate order number that will be used regardless of API or direct DB path
+        orderNumber = uuidv4();
+        
+        // First try using the API with proper cookie forwarding
         try {
+          // Get cookies to forward to API
+          const cookieStore = await cookies();
+          const authCookies = [
+            cookieStore.get('sb-access-token')?.value ? `sb-access-token=${cookieStore.get('sb-access-token')?.value}` : '',
+            cookieStore.get('sb-refresh-token')?.value ? `sb-refresh-token=${cookieStore.get('sb-refresh-token')?.value}` : '',
+            cookieStore.get('sb-auth-state')?.value ? `sb-auth-state=${cookieStore.get('sb-auth-state')?.value}` : ''
+          ].filter(Boolean).join('; ');
+          
           // In development, use localhost, in production use relative URL (which works with same-origin requests)
           const apiUrl = process.env.NODE_ENV === 'development' 
             ? 'http://localhost:3001/api/orders'
@@ -65,18 +81,23 @@ export default async function Success({ searchParams }: { searchParams: { sessio
           
           console.log('Calling orders API at:', apiUrl);
           
-          // Create the order using the API route
+          // Create the order using the API route with forwarded cookies
           const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Cookie': authCookies, // Forward authentication cookies
             },
-            credentials: 'include',
             body: JSON.stringify({
               userId,
               total: (session.amount_total || 0) / 100, // Convert from cents to dollars
-              items: orderItems,
-              status: 'completed'
+              items: cartItems.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.price
+              })),
+              status: 'completed',
+              orderNumber: orderNumber // Pass the generated order number to API
             })
           })
           
@@ -95,6 +116,7 @@ export default async function Success({ searchParams }: { searchParams: { sessio
             } else {
               console.log('Order created successfully with ID:', orderResult.orderId);
               orderId = orderResult.orderId;
+              orderCreated = true;
             }
           }
         } catch (apiError) {
@@ -104,9 +126,6 @@ export default async function Success({ searchParams }: { searchParams: { sessio
           console.log('Attempting direct database insertion as fallback...');
           
           try {
-            // Generate a unique order number
-            const orderNumber = uuidv4();
-            
             // Set the auth session if we have a token
             if (userSession?.accessToken) {
               await supabase.auth.setSession({
@@ -116,12 +135,12 @@ export default async function Success({ searchParams }: { searchParams: { sessio
               console.log('Successfully set auth session for direct DB access');
             }
             
-            // Insert the order directly - no created_at field
+            // Insert the order directly using the same order number
             const { data: orderData, error: orderError } = await supabase
               .from('orders')
               .insert({
                 userId: userId,
-                orderNumber: orderNumber,
+                orderNumber: orderNumber, // Use the same order number
                 total: (session.amount_total || 0) / 100,
                 status: 'completed'
               })
@@ -138,9 +157,10 @@ export default async function Success({ searchParams }: { searchParams: { sessio
               
               if (orderId) {
                 console.log('Order created directly with ID:', orderId);
+                orderCreated = true;
                 
                 // Insert order items
-                const formattedItems = orderItems.map(item => ({
+                const formattedItems = cartItems.map(item => ({
                   orderId: orderId,
                   productId: item.productId,
                   quantity: item.quantity,
@@ -183,8 +203,21 @@ export default async function Success({ searchParams }: { searchParams: { sessio
             </div>
             <h1 className="text-2xl font-bold text-center mb-4 text-black">Payment Successful!</h1>
             <p className="text-center mb-6 text-black">
-              Thank you for your purchase.
+              Thank you for your purchase. {orderCreated ? 'Your order has been placed successfully.' : 'Your payment was processed successfully.'}
             </p>
+            {orderCreated && orderNumber && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-2">Order Details:</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    Order Number: <span className="font-mono text-blue-600">#{orderNumber?.substring(0, 8)}</span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Keep this order number for your records
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="text-center">
               <a 
                 href="/" 
