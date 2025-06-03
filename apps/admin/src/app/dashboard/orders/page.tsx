@@ -31,25 +31,64 @@ interface Order {
   };
 }
 
-// Function to fetch orders
-async function fetchOrders() {
+// Pagination interface
+interface PaginationResult {
+  orders: Order[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+// Function to fetch orders with pagination
+async function fetchOrders(page: number = 1, pageSize: number = 10): Promise<PaginationResult> {
   try {
-    // First, fetch all orders with order items
+    const offset = (page - 1) * pageSize;
+
+    // Get total count of orders
+    const { count, error: countError } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      console.error('Error fetching orders count:', countError);
+      return {
+        orders: [],
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: page
+      };
+    }
+
+    const totalCount = count || 0;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // First, fetch orders with order items (with pagination)
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
       .select(`
         *,
         order_items(*)
       `)
-      .order('orderNumber', { ascending: false });
+      .order('orderNumber', { ascending: false })
+      .range(offset, offset + pageSize - 1);
     
     if (ordersError) {
       console.error('Error fetching orders:', ordersError);
-      return [];
+      return {
+        orders: [],
+        totalCount,
+        totalPages,
+        currentPage: page
+      };
     }
 
     if (!orders || orders.length === 0) {
-      return [];
+      return {
+        orders: [],
+        totalCount,
+        totalPages,
+        currentPage: page
+      };
     }
 
     // Get all unique user IDs from orders
@@ -118,10 +157,20 @@ async function fetchOrders() {
       })) || []
     }));
 
-    return ordersWithDetails;
+    return {
+      orders: ordersWithDetails,
+      totalCount,
+      totalPages,
+      currentPage: page
+    };
   } catch (error) {
     console.error('Unexpected error fetching orders:', error);
-    return [];
+    return {
+      orders: [],
+      totalCount: 0,
+      totalPages: 0,
+      currentPage: page
+    };
   }
 }
 
@@ -138,6 +187,164 @@ function OrderStatusBadge({ status }: { status: string }) {
     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}`}>
       {status}
     </span>
+  );
+}
+
+// Pagination Component
+function Pagination({ 
+  currentPage, 
+  totalPages, 
+  totalCount,
+  pageSize 
+}: { 
+  currentPage: number; 
+  totalPages: number; 
+  totalCount: number;
+  pageSize: number;
+}) {
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalCount);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-b-lg">
+      <div className="flex-1 flex justify-between sm:hidden">
+        {currentPage > 1 ? (
+          <Link
+            href={`?page=${currentPage - 1}`}
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Previous
+          </Link>
+        ) : (
+          <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+            Previous
+          </span>
+        )}
+        {currentPage < totalPages ? (
+          <Link
+            href={`?page=${currentPage + 1}`}
+            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Next
+          </Link>
+        ) : (
+          <span className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+            Next
+          </span>
+        )}
+      </div>
+      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm text-gray-700">
+            Showing <span className="font-medium">{startItem}</span> to{' '}
+            <span className="font-medium">{endItem}</span> of{' '}
+            <span className="font-medium">{totalCount}</span> results
+          </p>
+        </div>
+        <div>
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {currentPage > 1 ? (
+              <Link
+                href={`?page=${currentPage - 1}`}
+                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </Link>
+            ) : (
+              <span className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+            )}
+            
+            {getPageNumbers().map((pageNum, index) => {
+              if (pageNum === '...') {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                  >
+                    ...
+                  </span>
+                );
+              }
+              
+              const isCurrentPage = pageNum === currentPage;
+              return (
+                <Link
+                  key={pageNum}
+                  href={`?page=${pageNum}`}
+                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                    isCurrentPage
+                      ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNum}
+                </Link>
+              );
+            })}
+            
+            {currentPage < totalPages ? (
+              <Link
+                href={`?page=${currentPage + 1}`}
+                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </Link>
+            ) : (
+              <span className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+            )}
+          </nav>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -168,8 +375,9 @@ function OrdersLoading() {
 }
 
 // Orders List Component
-async function OrdersList() {
-  const orders = await fetchOrders();
+async function OrdersList({ currentPage, pageSize }: { currentPage: number; pageSize: number }) {
+  const result = await fetchOrders(currentPage, pageSize);
+  const { orders, totalCount, totalPages } = result;
   
   return (
     <div className="bg-gray-50 overflow-hidden sm:rounded-md">
@@ -178,141 +386,111 @@ async function OrdersList() {
           <p className="text-gray-500">No orders found.</p>
         </div>
       ) : (
-        <div className="space-y-6 p-4">
-          {orders.map((order: Order) => (
-            <div key={order.orderId} className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col sm:flex-row sm:items-center">
-                    <p className="text-sm font-medium text-indigo-600 truncate mr-4">
-                      Order #{order.orderId?.substring(0, 8)}
-                    </p>
-                    {/* <p className="flex-shrink-0 text-sm text-gray-500">
-                      Status: {order.status.toUpperCase()}
-                    </p> */}
-                  </div>
-                  <div className="ml-2 flex-shrink-0 flex">
-                    <OrderStatusBadge status={order.status.toUpperCase()} />
-                  </div>
-                </div>
-                <div className="mt-4 sm:flex sm:justify-between">
-                  <div className="sm:flex">
-                    <p className="flex items-center text-sm text-gray-500">
-                      <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Customer: {order.user?.email || 'Unknown'}
-                    </p>
-                    <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                      <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                      </svg>
-                      Items: {order.order_items?.length || 0}
-                    </p>
-                  </div>
-                  <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                    <p className="font-medium text-gray-900">${order.total?.toFixed(2)}</p>
-                    {/* <Link
-                      href={`/dashboard/orders/${order.orderId}`}
-                      className="ml-4 inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-                    >
-                      View Details
-                    </Link> */}
-                  </div>
-                </div>
-                
-                {/* Product Details */}
-                {order.order_items && order.order_items.length > 0 && (
-                  <div className="mt-6 border-t border-gray-200 pt-6">
-                    <h4 className="text-sm font-medium text-gray-900 mb-4">Products:</h4>
-                    <div className="space-y-3">
-                      {order.order_items.map((item: OrderItem) => (
-                        <div key={item.orderItemsId} className="flex justify-between items-center text-sm bg-gray-50 p-3 rounded-md">
-                          <div className="flex items-center">
-                            {item.product?.imageURL && (
-                              <img 
-                                src={item.product.imageURL} 
-                                alt={item.product.name || 'Product'} 
-                                className="w-10 h-10 object-cover rounded mr-3"
-                              />
-                            )}
-                            <span className="text-gray-700 font-medium">
-                              {item.product?.name || `Product ID: ${item.productId}`}
-                            </span>
-                          </div>
-                          <div className="text-gray-600 font-medium">
-                            Qty: {item.quantity} × ${(item.product?.price || (item.price / item.quantity)).toFixed(2)} = ${item.price.toFixed(2)}
-                          </div>
-                        </div>
-                      ))}
+        <>
+          <div className="space-y-6 p-4">
+            {orders.map((order: Order) => (
+              <div key={order.orderId} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="px-6 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center">
+                      <p className="text-sm font-medium text-indigo-600 truncate mr-4" data-testid="order-Id">
+                        Order #{order.orderId?.substring(0, 8)}
+                      </p>
+                      {/* <p className="flex-shrink-0 text-sm text-gray-500">
+                        Status: {order.status.toUpperCase()}
+                      </p> */}
+                    </div>
+                    <div className="ml-2 flex-shrink-0 flex">
+                      <OrderStatusBadge status={order.status.toUpperCase()} />
                     </div>
                   </div>
-                )}
+                  <div className="mt-4 sm:flex sm:justify-between">
+                    <div className="sm:flex">
+                      <p data-testid="order-customer" className="flex items-center text-sm text-gray-500">
+                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Customer: {order.user?.email || 'Unknown'}
+                      </p>
+                      <p data-testid="order-items" className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        Items: {order.order_items?.length || 0}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                      <p data-testid="order-total" className="font-medium text-gray-900">${order.total?.toFixed(2)}</p>
+                      {/* <Link
+                        href={`/dashboard/orders/${order.orderId}`}
+                        className="ml-4 inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+                      >
+                        View Details
+                      </Link> */}
+                    </div>
+                  </div>
+                  
+                  {/* Product Details */}
+                  {order.order_items && order.order_items.length > 0 && (
+                    <div className="mt-6 border-t border-gray-200 pt-6">
+                      <h4 className="text-sm font-medium text-gray-900 mb-4">Products:</h4>
+                      <div className="space-y-3">
+                        {order.order_items.map((item: OrderItem) => (
+                          <div key={item.orderItemsId} className="flex justify-between items-center text-sm bg-gray-50 p-3 rounded-md">
+                            <div className="flex items-center">
+                              {item.product?.imageURL && (
+                                <img 
+                                  src={item.product.imageURL} 
+                                  alt={item.product.name || 'Product'} 
+                                  className="w-10 h-10 object-cover rounded mr-3"
+                                />
+                              )}
+                              <span className="text-gray-700 font-medium">
+                                {item.product?.name || `Product ID: ${item.productId}`}
+                              </span>
+                            </div>
+                            <div className="text-gray-600 font-medium">
+                              Qty: {item.quantity} × ${(item.product?.price || (item.price / item.quantity)).toFixed(2)} = ${item.price.toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+          />
+        </>
       )}
     </div>
   );
 }
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const currentPage = parseInt(searchParams.page || '1', 10);
+  const pageSize = 5; // Changed from 10 to 5 orders per page
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
       </div>
       
-      <div className="bg-white shadow overflow-hidden sm:rounded-md mb-6 p-4">
-        <div className="flex flex-col sm:flex-row sm:justify-between space-y-3 sm:space-y-0">
-          <div className="max-w-lg w-full lg:max-w-xs">
-            <label htmlFor="search" className="sr-only">Search</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                id="search"
-                name="search"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Search orders by order number or customer"
-                type="search"
-              />
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            {/* <select
-              id="status"
-              name="status"
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select> */}
-            <select
-              id="sort"
-              name="sort"
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-black"
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="total_desc">Amount: High to Low</option>
-              <option value="total_asc">Amount: Low to High</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      
       <Suspense fallback={<OrdersLoading />}>
         {/* @ts-ignore */}
-        <OrdersList />
+        <OrdersList currentPage={currentPage} pageSize={pageSize} />
       </Suspense>
     </div>
   );

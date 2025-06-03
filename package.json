@@ -14,7 +14,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@playwright/test": "^1.0.0",
+    "@playwright/test": "^1.52.0",
     "@storybook/react": "^7.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^20",

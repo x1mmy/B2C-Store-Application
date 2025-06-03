@@ -78,6 +78,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
               type="text"
               name="name"
               id="name"
+              data-testid="product-name"
               required
               value={formData.name}
               onChange={handleChange}
@@ -94,6 +95,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
                 type="number"
                 name="price"
                 id="price"
+                data-testid="product-price"
                 required
                 min="0.01"
                 step="0.01"
@@ -111,6 +113,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
                 type="number"
                 name="stock"
                 id="stock"
+                data-testid="product-stock"
                 required
                 min="0"
                 step="1"
@@ -128,6 +131,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
             <select
               id="category"
               name="category"
+              data-testid="product-category"
               required
               value={formData.category}
               onChange={handleChange}
@@ -152,6 +156,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
                 type="text"
                 name="newCategory"
                 id="newCategory"
+                data-testid="product-new-category"
                 required
                 onChange={(e) => {
                   if (e.target.value) {
@@ -174,6 +179,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
               type="url"
               name="imageURL"
               id="imageURL"
+              data-testid="product-imageURL"
               value={formData.imageURL}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
@@ -189,6 +195,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
               id="description"
               name="description"
               rows={4}
+              data-testid="product-description"
               value={formData.description}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
@@ -207,6 +214,7 @@ export default function NewProductForm({ categories }: NewProductFormProps) {
           
           <button
             type="submit"
+            data-testid="save-changes-button"
             disabled={isSubmitting}
             className={`py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
               isSubmitting ? 'opacity-50 cursor-not-allowed' : ''

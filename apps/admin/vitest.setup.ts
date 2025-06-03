@@ -2,8 +2,8 @@ import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
 // Set up environment variables for tests
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://cyihruftnrlpdcjhochq.supabase.co'
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5aWhydWZ0bnJscGRjamhvY2hxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjI2Nzg1NSwiZXhwIjoyMDYxODQzODU1fQ.RoqDqAVJhGjQGlf_UWX_ul37IEwjxwOyT_joKgOGDR4'
 
 // Mock Supabase client
 const mockSupabase = {
