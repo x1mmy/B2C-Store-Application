@@ -117,6 +117,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
               type="text"
               name="name"
               id="name"
+              data-testid="product-name"
               required
               value={formData.name}
               onChange={handleChange}
@@ -133,6 +134,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
                 type="number"
                 name="price"
                 id="price"
+                data-testid="product-price"
                 required
                 min="0.01"
                 step="0.01"
@@ -150,6 +152,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
                 type="number"
                 name="stock"
                 id="stock"
+                data-testid="product-stock"
                 required
                 min="0"
                 step="1"
@@ -167,6 +170,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
             <select
               id="category"
               name="category"
+              data-testid="product-category"
               required
               value={formData.category}
               onChange={handleChange}
@@ -189,6 +193,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
               type="url"
               name="imageURL"
               id="imageURL"
+              data-testid="product-imageURL"
               value={formData.imageURL}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
@@ -204,6 +209,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
               id="description"
               name="description"
               rows={4}
+              data-testid="product-description"
               value={formData.description}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
@@ -224,6 +230,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
             <button
               type="button"
               onClick={handleDelete}
+              data-testid="delete-product-button"
               disabled={isDeleting}
               className={`py-2 px-4 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
                 isDeleting ? 'opacity-50 cursor-not-allowed' : ''
@@ -233,6 +240,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
             </button>
             <button
               type="submit"
+              data-testid="save-changes-button"
               disabled={isSubmitting}
               className={`py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
                 isSubmitting ? 'opacity-50 cursor-not-allowed' : ''

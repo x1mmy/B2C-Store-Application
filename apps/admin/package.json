@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "next lint",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage"
+    "test:e2e": "cd ../../ && npx playwright test playwright/admin/",
+    "test:e2e:ui": "cd ../../ && npx playwright test playwright/admin/ --ui",
+    "test:e2e:headed": "cd ../../ && npx playwright test playwright/admin/ --headed",
+    "test:e2e:debug": "cd ../../ && npx playwright test playwright/admin/ --debug"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.7",
@@ -21,20 +21,13 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@testing-library/jest-dom": "^6.1.4",
-    "@testing-library/react": "^15.0.0",
-    "@testing-library/user-event": "^14.5.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
-    "jsdom": "^25.0.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "vite": "^5.0.8",
-    "vitest": "^2.0.0"
+    "typescript": "^5"
   }
 }

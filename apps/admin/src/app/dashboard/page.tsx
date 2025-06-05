@@ -124,7 +124,7 @@ export default function Dashboard() {
       
       <div className="mt-6">
         <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">Welcome to your Admin Dashboard</h2>
+          <h2 data-testid="dashboard-title" className="text-lg font-medium text-gray-900 mb-2">Welcome to your Admin Dashboard</h2>
           <p className="text-gray-600">
             This is your central hub for managing your e-commerce store. Use the sidebar to navigate to different sections.
           </p>

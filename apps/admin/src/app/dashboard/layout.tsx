@@ -91,6 +91,7 @@ export default function DashboardLayout({
                 <div>
                   <p className="text-sm font-medium text-gray-700">{userEmail}</p>
                   <button 
+                    data-testid="sign-out-button"
                     onClick={handleSignOut}
                     className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
                   >
