@@ -18,28 +18,10 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 22.14.0
+        cache: 'npm'
     
-    - name: Install pnpm
-      run: |
-        npm install -g pnpm@10.6.4
-        pnpm --version
-        
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-        
-    - name: Setup pnpm cache
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-          
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: npm ci
       
     - name: Skip Direct Linting (handled by build)
       run: echo "Linting is configured to be skipped during builds in next.config.ts"
@@ -53,7 +35,7 @@ jobs:
         # Stripe environment variables
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-      run: pnpm build
+      run: npm run build
       
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
@@ -67,7 +49,7 @@ jobs:
         # Stripe environment variables
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-      run: pnpm test:e2e
+      run: npm run test:e2e
       
     - name: Upload Playwright test results
       if: always()
