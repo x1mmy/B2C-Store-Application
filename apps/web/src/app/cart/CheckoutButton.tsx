@@ -61,6 +61,7 @@ export default function CheckoutButton({ items, disabled = false }: CheckoutButt
 
   return (
     <button 
+      data-testid="checkout-button"
       onClick={handleCheckout}
       disabled={disabled || loading || items.length === 0}
       className="w-full block text-center bg-black text-white font-bold py-2 px-4 rounded mt-6 hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"

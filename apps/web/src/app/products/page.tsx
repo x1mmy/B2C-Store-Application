@@ -119,6 +119,7 @@ export default function ProductsPage() {
                             <input
                                 type="text"
                                 placeholder="Search products..."
+                                data-testid="search-bar"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="form-input block w-full pl-4 pr-10 py-2 rounded-full text-black bg-white border-gray-300 focus:border-red-600 focus:ring focus:ring-red-200 focus:ring-opacity-50"
@@ -134,6 +135,7 @@ export default function ProductsPage() {
                     {/* Category filters - populated from Supabase data */}
                     <div className="mt-6 flex flex-wrap justify-center gap-3">
                         <button
+                            data-testid="category-filter-button-all"
                             onClick={() => setSelectedCategory(null)}
                             className={`px-4 py-2 rounded-full ${selectedCategory === null 
                                 ? 'bg-red-700 text-white' 
@@ -144,6 +146,7 @@ export default function ProductsPage() {
                         {categories.map((category) => (
                             <button
                                 key={category}
+                                data-testid={`category-filter-button-${category}`}
                                 onClick={() => setSelectedCategory(category)}
                                 className={`px-4 py-2 rounded-full ${selectedCategory === category 
                                     ? 'bg-red-700 text-white' 
@@ -162,6 +165,7 @@ export default function ProductsPage() {
                     {/* Map through filtered products from Supabase and render ProductCard for each */}
                     {filteredProducts.map((product) => (
                         <ProductCard 
+                            
                             key={product.productId} 
                             product={product} 
                             /* 

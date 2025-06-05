@@ -66,7 +66,8 @@ export async function GET(req: NextRequest) {
           price
         )
       `)
-      .eq('userId', userId);
+      .eq('userId', userId)
+      .order('orderId', { ascending: false }); // Order by newest first (UUIDs are roughly chronological)
     
     // If we have orders, fetch product details for all order items
     if (orders && orders.length > 0) {

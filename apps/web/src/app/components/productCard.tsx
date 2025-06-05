@@ -51,9 +51,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
     
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:scale-105">
+        <div data-testid="product-card" className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:scale-105">
             {/* Link to the product detail page */}
-            <Link href={productUrl} className="block relative">
+            <Link data-testid="product-card-link" href={productUrl} className="block relative">
                 <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200">
                     <div className="relative w-full h-64">
                         <Image 

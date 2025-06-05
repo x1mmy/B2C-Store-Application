@@ -81,11 +81,18 @@ function CartContent() {
         
         {/* Display empty cart message if cart has no items */}
         {cart.length === 0 ? (
-            <div className="text-center py-8">
-            <p className="text-xl mb-4 text-black">Your cart is empty</p>
-            <Link href="/products" className="text-black hover:underline">
-                Continue Shopping
-            </Link>
+            <div className="text-center py-16 min-h-[400px] flex flex-col justify-center">
+            <div className="max-w-md mx-auto">
+
+                <p className="text-2xl mb-4 text-black font-semibold text-white">No products in cart</p>
+                <p className="text-gray-600 mb-6 text-white">Looks like you haven't added any items to your cart yet.</p>
+                <Link 
+                    href="/products" 
+                    className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors duration-200"
+                >
+                    Continue Shopping
+                </Link>
+            </div>
             </div>
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -117,22 +124,24 @@ function CartContent() {
                                     className="object-cover rounded"
                                 />
                             </div>
-                            <span className="text-black">{item.name}</span>
+                            <span data-testid="cart-item-name" className="text-black">{item.name}</span>
                             </div>
                         </td>
                         {/* Display product price from Supabase */}
-                        <td className="text-right py-4 text-black">{formatCurrency(item.price)}</td>
+                        <td data-testid="cart-item-price" className="text-right py-4 text-black">{formatCurrency(item.price)}</td>
                         {/* Quantity controls */}
                         <td className="text-center py-4 text-black">
                             <div className="flex items-center justify-center">
                                 <button 
+                                    data-testid="cart-item-quantity-decrease"
                                     onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                                     className="w-8 h-8 bg-gray-200 rounded-l flex items-center justify-center"
                                 >
                                     -
                                 </button>
-                                <span className="w-10 text-center">{item.quantity}</span>
+                                <span data-testid="cart-item-quantity" className="w-10 text-center">{item.quantity}</span>
                                 <button 
+                                    data-testid="cart-item-quantity-increase"
                                     onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                                     className="w-8 h-8 bg-gray-200 rounded-r flex items-center justify-center"
                                 >
@@ -141,9 +150,10 @@ function CartContent() {
                             </div>
                         </td>
                         {/* Calculate line total based on Supabase price and quantity */}
-                        <td className="text-right py-4 text-black">{formatCurrency(item.price * item.quantity)}</td>
+                        <td data-testid="cart-item-total" className="text-right py-4 text-black">{formatCurrency(item.price * item.quantity)}</td>
                         <td className="text-right py-4 text-black">
                             <button
+                                data-testid="cart-item-remove"
                                 onClick={() => removeFromCart(item.productId)}
                                 className="text-red-600 hover:text-red-800"
                             >
@@ -163,11 +173,11 @@ function CartContent() {
                 <h2 className="text-xl font-bold mb-4 text-black">Order Summary</h2>
                 <div className="flex justify-between py-2">
                     <span className="text-black">Subtotal</span>
-                    <span className="text-black">{formatCurrency(subtotal)}</span>
+                    <span data-testid="cart-subtotal" className="text-black">{formatCurrency(subtotal)}</span>
                 </div>
                 <div className="flex justify-between py-2 font-bold border-t border-gray-200 mt-2 pt-2">
                     <span className="text-black">Total</span>
-                    <span className="text-black">{formatCurrency(total)}</span>
+                    <span data-testid="cart-total" className="text-black">{formatCurrency(total)}</span>
                 </div>
                 
                 <CheckoutButton items={cart} />
