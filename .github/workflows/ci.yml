@@ -18,11 +18,11 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 22.14.0
-        
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 10.6.4
+    
+    - name: Install pnpm
+      run: |
+        npm install -g pnpm@10.6.4
+        pnpm --version
         
     - name: Get pnpm store directory
       id: pnpm-cache
