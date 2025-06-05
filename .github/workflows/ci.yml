@@ -78,6 +78,38 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
       
+    - name: Install wait-on for server readiness checks
+      run: npm install -g wait-on
+      
+    - name: Start web server
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      run: |
+        cd apps/web
+        pnpm start &
+        sleep 10
+        
+    - name: Start admin server
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      run: |
+        cd apps/admin
+        pnpm start &
+        sleep 10
+        
+    - name: Wait for servers to be ready
+      run: |
+        npx wait-on http://localhost:3001 --timeout 60000
+        npx wait-on http://localhost:3002 --timeout 60000
+      
     - name: Run E2E tests
       env:
         # Supabase environment variables
@@ -87,7 +119,7 @@ jobs:
         # Stripe environment variables
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-      run: npx playwright test playwright/admin/
+      run: npx playwright test playwright/admin/ playwright/web/
       
     - name: Upload Playwright test results
       if: always()
