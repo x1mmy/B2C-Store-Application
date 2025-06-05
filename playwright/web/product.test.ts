@@ -164,204 +164,100 @@ test.describe('Web App - Product Page', () => {
     });
 
     // Test checkout flow by bypassing Stripe and directly creating an order
-    // test('bypass stripe checkout and test order creation and viewing', async ({ page }) => {
-    //     // First, log in
-    //     await page.goto('http://localhost:3001/auth/login');
-    //     await page.fill('input[data-testid="email-address"]', 'zimraan2012@gmail.com');
-    //     await page.fill('input[data-testid="password"]', 'testing123');
-    //     await page.click('button[data-testid="login-button"]');
-    //     await page.waitForTimeout(3000);
+    // because wont let me access stripe for e2e testing
+    test('bypass stripe checkout, assume it was successful and test order creation and viewing', async ({ page }) => {
+        // First, log in
+        await page.goto('http://localhost:3001/auth/login');
+        await page.fill('input[data-testid="email-address"]', 'zimraan2012@gmail.com');
+        await page.fill('input[data-testid="password"]', 'testing123');
+        await page.click('button[data-testid="login-button"]');
+        await page.waitForTimeout(3000);
 
-    //     // Get product information by visiting the product page first
-    //     await page.goto('http://localhost:3001/products');
+        // Get product information by visiting the product page first
+        await page.goto('http://localhost:3001/products');
         
-    //     // Get the first product details
-    //     const firstProductLink = page.locator('a[data-testid="product-card-link"]').first();
-    //     await firstProductLink.click();
+        // Get the first product details
+        const firstProductLink = page.locator('a[data-testid="product-card-link"]').first();
+        await firstProductLink.click();
         
-    //     // Extract product information from the product detail page
-    //     const productName = await page.locator('h1[data-testid="product-name"]').textContent();
-    //     const productPrice = await page.locator('p[data-testid="product-price"]').textContent();
-    //     const priceValue = parseFloat(productPrice?.replace('$', '') || '0');
+        // Extract product information from the product detail page
+        const productName = await page.locator('h1[data-testid="product-name"]').textContent();
+        const productPrice = await page.locator('p[data-testid="product-price"]').textContent();
+        const priceValue = parseFloat(productPrice?.replace('$', '') || '0');
         
-    //     console.log('Product details:', { productName, productPrice, priceValue });
+        console.log('Product details:', { productName, productPrice, priceValue });
         
-    //     // Calculate order total properly
-    //     const quantity = 10;
-    //     const itemTotal = priceValue * quantity;
+        // Use a unique quantity to create a distinctive total that won't conflict with other orders
+        const quantity = 7; // Changed from 10 to 7 to create a unique total
+        const itemTotal = (priceValue * quantity).toFixed(2);
         
-    //     // Create a fake order by directly calling the orders API
-    //     const fakeOrderData = {
-    //         userId: 'user-id-will-be-validated-server-side', // This will be overridden by server
-    //         total: itemTotal, // Fix: total should equal the item total
-    //         status: 'completed',
-    //         items: [
-    //             {
-    //                 productId: 'budo-snake-rashguard', // Known product ID from your test data
-    //                 quantity: quantity,
-    //                 price: priceValue // Individual item price, not total
-    //             }
-    //         ]
-    //     };
+        // // Create a fake order by directly calling the orders API
+        const fakeOrderData = {
+            userId: 'd4119229-928a-410d-9d51-3f215111dd87', // Hardcoded user ID - zimraan2012@gmail.com
+            total: itemTotal, // Fix: total should equal the item total
+            status: 'completed',
+            items: [
+                {
+                    productId: '03067a53-f179-43c2-80cb-3b608d6e2aa5', // Actual productId from Supabase database
+                    quantity: quantity,
+                    price: priceValue // Individual item price, not total
+                }
+            ]
+        };
 
-    //     console.log('Creating order with data:', fakeOrderData);
+        console.log('Creating order with data:', fakeOrderData);
 
-    //     // Make API call to create the order using the authenticated session
-    //     const orderResponse = await page.evaluate(async (orderData) => {
-    //         const response = await fetch('/api/orders', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(orderData)
-    //         });
-    //         const result = await response.json();
-    //         return { status: response.status, data: result };
-    //     }, fakeOrderData);
+        // Make API call to create the order using the authenticated session
+        const orderResponse = await page.evaluate(async (orderData) => {
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            });
+            const result = await response.json();
+            return { status: response.status, data: result };
+        }, fakeOrderData);
 
-    //     console.log('Order creation response:', orderResponse);
+        // console.log('Order creation response:', orderResponse);
 
-    //     // Verify the order was created successfully
-    //     expect(orderResponse.status).toBe(200);
-    //     expect(orderResponse.data.success).toBe(true);
-    //     expect(orderResponse.data.orderId).toBeDefined();
+        // Verify the order was created successfully
+        expect(orderResponse.status).toBe(200);
+        expect(orderResponse.data.success).toBe(true);
+        expect(orderResponse.data.orderId).toBeDefined();
 
-    //     const createdOrderId = orderResponse.data.orderId;
-    //     const createdOrderNumber = orderResponse.data.orderNumber;
+        // const createdOrderId = orderResponse.data.orderId;
+        const createdOrderNumber = orderResponse.data.orderNumber;
         
-    //     console.log('Order created successfully:', { orderId: createdOrderId, orderNumber: createdOrderNumber });
+        // console.log('Order created successfully:', { orderId: createdOrderId, orderNumber: createdOrderNumber });
 
-    //     // Wait a moment for the order to be processed
-    //     await page.waitForTimeout(2000);
+        // Wait a moment for the order to be processed
+        await page.waitForTimeout(2000);
 
-    //     // Navigate to orders page to verify the order appears
-    //     await page.goto('http://localhost:3001/account/orders');
-    //     await page.waitForTimeout(3000);
+        // Navigate to orders page to verify the order appears
+        await page.goto('http://localhost:3001/account/orders');
+        await page.waitForTimeout(3000);
 
-    //     // Verify the order appears in the orders list
-    //     await expect(page.locator('h1')).toHaveText('Your Orders');
+
+
+        // Verify the order appears in the orders list
+        await expect(page.locator('h1')).toHaveText('Your Orders');
         
-    //     // Check that we have at least one order displayed
-    //     const orderCards = page.locator('div:has-text("Order #")');
-    //     await expect(orderCards.first()).toBeVisible();
+        // Check that we have the test order displayed
+        const orderCards = page.locator(`h2:text-is("Order #${createdOrderNumber.substring(0, 8)}")`);
         
-    //     // Look for the specific order total we created ($699.50 for 10 * $69.95)
-    //     const expectedTotal = `$${itemTotal.toFixed(2)}`;
-    //     console.log('Looking for order total:', expectedTotal);
-    //     await expect(page.locator(`text=${expectedTotal}`)).toBeVisible();
+        await expect(orderCards).toBeVisible();
         
-    //     // Look for the completed status
-    //     await expect(page.locator('text=Completed')).toBeVisible();
-        
-    //     // Check that order items are displayed
-    //     await expect(page.locator('h3:has-text("Order Items")')).toBeVisible();
-        
-    //     // Look for the quantity in the order items
-    //     await expect(page.locator(`text=Quantity: ${quantity}`)).toBeVisible();
-        
-    //     console.log('Order creation test completed successfully');
-    // });
+        // check the quantity is correct
+        await expect(page.locator(`text=Quantity: ${quantity}`)).toBeVisible();
 
-    // Test that creates order and then shows success-like flow
-    // test('create order and verify it shows in orders list with correct details', async ({ page }) => {
-    //     // First, log in
-    //     await page.goto('http://localhost:3001/auth/login');
-    //     await page.fill('input[data-testid="email-address"]', 'zimraan2012@gmail.com');
-    //     await page.fill('input[data-testid="password"]', 'testing123');
-    //     await page.click('button[data-testid="login-button"]');
-    //     await page.waitForTimeout(3000);
+        // check the total is correct
+        await expect(page.locator(`text=$${itemTotal}`)).toBeVisible();
 
-    //     // Create a distinctive order that will be easy to spot
-    //     const quantity = 10;
-    //     const pricePerItem = 69.95; // Budo Snake Rashguard price
-    //     const totalAmount = quantity * pricePerItem; // $699.50
-        
-    //     const orderData = {
-    //         userId: 'user-id-will-be-validated-server-side',
-    //         total: totalAmount,
-    //         status: 'completed',
-    //         items: [
-    //             {
-    //                 productId: 'budo-snake-rashguard',
-    //                 quantity: quantity,
-    //                 price: pricePerItem
-    //             }
-    //         ]
-    //     };
 
-    //     console.log('Creating test order:', { total: totalAmount, quantity });
+        // console.log('Order creation test completed successfully');
+    });
 
-    //     // Create the order via API
-    //     const orderResponse = await page.evaluate(async (orderData) => {
-    //         const response = await fetch('/api/orders', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(orderData)
-    //         });
-    //         const result = await response.json();
-    //         return { status: response.status, data: result };
-    //     }, orderData);
-
-    //     // Verify order creation
-    //     expect(orderResponse.status).toBe(200);
-    //     expect(orderResponse.data.success).toBe(true);
-    //     expect(orderResponse.data.orderId).toBeDefined();
-    //     expect(orderResponse.data.orderNumber).toBeDefined();
-
-    //     const orderId = orderResponse.data.orderId;
-    //     const orderNumber = orderResponse.data.orderNumber;
-    //     const shortOrderNumber = orderNumber.substring(0, 8);
-
-    //     console.log('Order created:', { orderId, orderNumber: shortOrderNumber, total: totalAmount });
-
-    //     // Simulate success page scenario by showing what would happen
-    //     // In a real scenario, user would be redirected to /cart/checkout/success?session_id=xxx
-    //     // But since we can't mock Stripe session, we'll just show the order was created
-        
-    //     console.log('Simulating success: Order created successfully');
-    //     console.log(`Success message would show: Order Number: #${shortOrderNumber}`);
-    //     console.log(`Total: $${totalAmount.toFixed(2)}`);
-
-    //     // Wait a moment for database operations to complete
-    //     await page.waitForTimeout(2000);
-
-    //     // Navigate to orders page to verify the order
-    //     await page.goto('http://localhost:3001/account/orders');
-    //     await page.waitForTimeout(3000);
-
-    //     // Verify we're on the orders page
-    //     await expect(page.locator('h1')).toHaveText('Your Orders');
-
-    //     // Look for our specific order - it should be the first one (newest)
-    //     const firstOrderCard = page.locator('div.bg-white.rounded-lg.shadow-md').first();
-    //     await expect(firstOrderCard).toBeVisible();
-
-    //     // Check for the order number (first 8 characters)
-    //     await expect(page.locator(`text=Order #${shortOrderNumber}`)).toBeVisible();
-
-    //     // Check for the total amount
-    //     await expect(page.locator(`text=$${totalAmount.toFixed(2)}`)).toBeVisible();
-
-    //     // Check for completed status
-    //     await expect(firstOrderCard.locator('text=Completed')).toBeVisible();
-
-    //     // Check that order items section exists
-    //     await expect(firstOrderCard.locator('h3:has-text("Order Items")')).toBeVisible();
-
-    //     // Check for the specific quantity in the order items
-    //     await expect(firstOrderCard.locator(`text=Quantity: ${quantity}`)).toBeVisible();
-
-    //     // Check for individual item price
-    //     await expect(firstOrderCard.locator(`text=$${pricePerItem.toFixed(2)}`)).toBeVisible();
-
-    //     // Verify the "View Orders" link exists (as it would on success page)
-    //     await expect(page.locator('a[href="/account/orders"]')).toBeVisible();
-
-    //     console.log('✅ Order verification completed successfully');
-    //     console.log(`✅ Found order #${shortOrderNumber} with total $${totalAmount.toFixed(2)}`);
-    //     console.log(`✅ Verified quantity: ${quantity} items at $${pricePerItem.toFixed(2)} each`);
-    // });
 
 });
