@@ -477,9 +477,10 @@ async function OrdersList({ currentPage, pageSize }: { currentPage: number; page
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
-  const currentPage = parseInt(searchParams.page || '1', 10);
+  const resolvedSearchParams = await searchParams;
+  const currentPage = parseInt(resolvedSearchParams.page || '1', 10);
   const pageSize = 5; // Changed from 10 to 5 orders per page
 
   return (
