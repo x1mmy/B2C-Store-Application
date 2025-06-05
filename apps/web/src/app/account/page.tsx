@@ -42,15 +42,15 @@ export default async function AccountPage() {
         <h1 className="text-3xl font-bold mb-8 text-black">Your Account</h1>
         
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 text-black">Profile Information</h2>
+          <h2 data-testid="profile-information-title" className="text-xl font-bold mb-4 text-black">Profile Information</h2>
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-500 text-black">Email Address</p>
-              <p className="font-medium text-black">{user.email}</p>
+              <p data-testid="profile-information-email" className="font-medium text-black">{user.email}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 text-black">User ID</p>
-              <p className="font-medium text-black">{user.id}</p>
+              <p data-testid="profile-information-user-id" className="font-medium text-black">{user.id}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 text-black">Account Created</p>
@@ -66,18 +66,19 @@ export default async function AccountPage() {
         </div>
         
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 text-black">Recent Orders</h2>
+          <h2 data-testid="recent-orders-title" className="text-xl font-bold mb-4 text-black">Recent Orders</h2>
           <p className="text-gray-500 text-black">View your order history and track your purchases.</p>
-          <Link href="/account/orders" className="text-blue-600 hover:underline block mt-4">
+          <Link data-testid="recent-orders-link" href="/account/orders" className="text-blue-600 hover:underline block mt-4">
             View All Orders
           </Link>
         </div>
         
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4 text-black">Account Actions</h2>
-          <div className="flex flex-wrap gap-4">
+          <div data-testid="account-actions" className="flex flex-wrap gap-4">
             <LogoutButton />
             <Link 
+              data-testid="view-cart-link"
               href="/cart" 
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors inline-block"
             >

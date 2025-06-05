@@ -26,6 +26,9 @@ export default function LoginPage() {
       // send the data to the backend
       const response = await fetch('/api/auth/login', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -94,6 +97,7 @@ export default function LoginPage() {
                   name="email"
                   type="email"
                   autoComplete="email"
+                  data-testid="email-address"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                   placeholder="Email address"
@@ -108,6 +112,7 @@ export default function LoginPage() {
                   name="password"
                   type="password"
                   autoComplete="current-password"
+                  data-testid="password"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                   placeholder="Password"
@@ -121,6 +126,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
+                data-testid="login-button"
                 className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
                   isLoading ? 'bg-red-400' : 'bg-red-600 hover:bg-red-700'
                 } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}

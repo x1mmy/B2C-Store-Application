@@ -19,28 +19,28 @@ test.describe('Admin Products E2E Tests', () => {
     });
 
     // the products page should display all the products - 3 products
-    test('should display product page with exactly 3 products and all required elements', async ({ page }) => {
+    test('should display product page with exactly 5 products and all required elements', async ({ page }) => {
         // Check main page elements
         await expect(page.locator('[data-testid="products-title"]')).toBeVisible();
         await expect(page.locator('[data-testid="add-product-button"]')).toBeVisible();
         
         // Verify there are exactly 3 products
         const productNames = page.locator('[data-testid="product-name"]');
-        await expect(productNames).toHaveCount(3);
+        await expect(productNames).toHaveCount(5);
         
         const productCategories = page.locator('[data-testid="product-category"]');
-        await expect(productCategories).toHaveCount(3);
+        await expect(productCategories).toHaveCount(5);
         
         const productPrices = page.locator('[data-testid="product-price"]');
-        await expect(productPrices).toHaveCount(3);
+        await expect(productPrices).toHaveCount(5);
         
         const productStocks = page.locator('[data-testid="product-stock"]');
-        await expect(productStocks).toHaveCount(3);
+        await expect(productStocks).toHaveCount(5);
         
         const productEditButtons = page.locator('[data-testid="product-edit-button"]');
-        await expect(productEditButtons).toHaveCount(3);
+        await expect(productEditButtons).toHaveCount(5);
         
-        // Verify specific product content (based on the error message)
+        // Verify specific product content - the first 3
         await expect(productNames.nth(0)).toContainText('180" BOXRAW Hand Wraps');
         await expect(productNames.nth(1)).toContainText('Budo Snake Rashguard');
         await expect(productNames.nth(2)).toContainText('Engage 16oz Boxing Gloves');
@@ -56,6 +56,7 @@ test.describe('Admin Products E2E Tests', () => {
         await page.waitForTimeout(1000);
         await expect(page.locator('[data-testid="product-name"]')).toHaveCount(1);
         await expect(page.locator('[data-testid="product-name"]').nth(0)).toContainText('Engage 16oz Boxing Gloves');
+
 
         // now if we search for "Budo" we should only see the Budo product
         await page.fill('input[name="search"]', 'Budo');
@@ -83,7 +84,7 @@ test.describe('Admin Products E2E Tests', () => {
         // now if we filter by "Boxing" we should only see boxing tagged products
         await page.selectOption('select[name="category"]', 'Boxing');
         await page.waitForTimeout(1000);
-        await expect(page.locator('[data-testid="product-name"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="product-name"]')).toHaveCount(3);
         await expect(page.locator('[data-testid="product-name"]').nth(0)).toContainText('180" BOXRAW Hand Wraps');
         await expect(page.locator('[data-testid="product-name"]').nth(1)).toContainText('Engage 16oz Boxing Gloves');
 
@@ -133,11 +134,11 @@ test.describe('Admin Products E2E Tests', () => {
         // goes back to the products page
         await expect(page).toHaveURL(/^http:\/\/localhost:3002\/dashboard\/products/, { timeout: 10000 });
         // check that the product name has been updated
-        await expect(page.locator('[data-testid="product-name"]').nth(3)).toContainText('Test Product');
+        await expect(page.locator('[data-testid="product-name"]').nth(4)).toContainText('Test Product');
 
         // DELETE THE PRODUCT
         // go to the test product (4th product, index 3)
-        await page.locator('a[data-testid="product-edit-button"]').nth(3).click();
+        await page.locator('a[data-testid="product-edit-button"]').nth(4).click();
         // check that we are on the test product
         await expect(page).toHaveURL(/^http:\/\/localhost:3002\/dashboard\/products\/[0-9a-f-]+$/, { timeout: 10000 });
         await expect(page.locator('input[data-testid="product-name"]')).toHaveValue('Test Product');

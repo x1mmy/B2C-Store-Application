@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         {/* 
           AuthProvider wraps the entire application to provide authentication functionality
@@ -61,7 +61,7 @@ export default function RootLayout({
           <CartProvider>
             {/* We can't use useAuth here because it must be used inside the AuthProvider */}
             <Header />
-            <main>
+            <main className="flex-grow">
               {children}
             </main>
             <Footer />

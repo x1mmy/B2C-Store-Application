@@ -33,8 +33,16 @@ export default function Header() {
   // Add a direct cookie check as a backup
   const [cookieAuthState, setCookieAuthState] = useState(false);
   
+  // Add a logout flag to prevent cookie checks during logout
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
   // Function to check if auth cookie exists directly
   const checkAuthStateCookie = () => {
+    // Don't check cookies during logout process
+    if (isLoggingOut) {
+      return false;
+    }
+    
     if (typeof document !== 'undefined') {
       const hasAuthCookie = document.cookie.includes('sb-auth-state=authenticated');
       console.log("Direct cookie check result:", hasAuthCookie);
@@ -134,19 +142,32 @@ export default function Header() {
    */
   const handleLogout = async () => {
     console.log("Header: Logging out user...");
-    // First clear our direct cookie state
+    
+    // Set logout flag first - this will immediately prevent cookie checks
+    // and cause the UI to show login/register buttons
+    setIsLoggingOut(true);
+    
+    // Clear our direct cookie state
     setCookieAuthState(false);
     setAuthState(false);
     
-    // Then call the real logout
-    await logout();
-    
-    // Redirect to home page
-    router.push('/');
+    try {
+      // Then call the real logout
+      await logout();
+      
+      // Redirect to home page
+      router.push('/');
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Reset logout flag after everything is done
+      setIsLoggingOut(false);
+    }
   };
 
   // Determine if user should be treated as authenticated for UI purposes
-  const isUserAuthenticated = authState || cookieAuthState;
+  // If we're logging out, treat as not authenticated to immediately update UI
+  const isUserAuthenticated = !isLoggingOut && (authState || cookieAuthState);
 
   return (
     <header className="bg-white shadow-md">
@@ -207,6 +228,7 @@ export default function Header() {
                   </span> */}
                   <button
                     onClick={handleLogout}
+                    data-testid="header-logout-button"
                     className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors font-medium"
                   >
                     Logout
@@ -215,13 +237,15 @@ export default function Header() {
               ) : ( // if the user is not authenticated, show the login and register links
                 <>
                   <Link 
-                    href="/auth/login" 
+                    href="/auth/login"
+                    data-testid="header-login-button"
                     className="text-gray-600 hover:text-red-600 font-medium"
                   >
                     Login
                   </Link>
                   <Link 
                     href="/auth/register" 
+                    data-testid="header-register-button"
                     className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors font-medium"
                   >
                     Register

@@ -135,6 +135,7 @@ export default function RegisterPage() {
                                     name="email"
                                     type="email"
                                     autoComplete="email"
+                                    data-testid="email-address"
                                     required
                                     className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                                     placeholder="Email address"
@@ -148,6 +149,7 @@ export default function RegisterPage() {
                                     id="password"
                                     name="password"
                                     type="password"
+                                    data-testid="password"
                                     autoComplete="new-password"
                                     required
                                     className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
@@ -162,6 +164,7 @@ export default function RegisterPage() {
                                     id="confirm-password"
                                     name="confirmPassword"
                                     type="password"
+                                    data-testid="confirm-password"
                                     autoComplete="new-password"
                                     required
                                     className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
@@ -176,6 +179,7 @@ export default function RegisterPage() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
+                                data-testid="register-button"
                                 className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${isLoading ? 'bg-red-400' : 'bg-red-600 hover:bg-red-700'
                                     } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}
                             >

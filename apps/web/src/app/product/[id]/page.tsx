@@ -178,12 +178,12 @@ export default function ProductPage() {
                     {/* Product Details from Supabase */}
                     <div className="mt-10 px-4 sm:px-0 sm:mt-16 lg:mt-0">
                         {/* Product Name from Supabase */}
-                        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{product.name}</h1>
+                        <h1 data-testid="product-name" className="text-3xl font-extrabold tracking-tight text-gray-900">{product.name}</h1>
                         
                         {/* Product Category from Supabase */}
                         {product.category && (
                             <div className="mt-3">
-                                <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                <span data-testid="product-category" className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
                                     {product.category}
                                 </span>
                             </div>
@@ -192,7 +192,7 @@ export default function ProductPage() {
                         {/* Product Price from Supabase */}
                         <div className="mt-6">
                             <h2 className="sr-only">Product information</h2>
-                            <p className="text-3xl text-gray-900">${product.price.toFixed(2)}</p>
+                            <p data-testid="product-price" className="text-3xl text-gray-900">${product.price.toFixed(2)}</p>
                         </div>
 
                         {/* Product Description from Supabase */}
@@ -200,7 +200,7 @@ export default function ProductPage() {
                             <div className="mt-6">
                                 <h3 className="text-lg font-medium text-gray-900">Description</h3>
                                 <div className="mt-2 prose prose-sm text-gray-500">
-                                    <p>{product.description}</p>
+                                    <p data-testid="product-description">{product.description}</p>
                                 </div>
                             </div>
                         )}
@@ -234,6 +234,7 @@ export default function ProductPage() {
 
                             {/* Add to Cart Button - disabled if out of stock in Supabase */}
                             <button
+                                data-testid="add-to-cart-button"
                                 type="button"
                                 onClick={handleAddToCart}
                                 className="mt-4 w-full bg-red-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
