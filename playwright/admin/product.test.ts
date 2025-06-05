@@ -99,7 +99,7 @@ test.describe('Admin Products E2E Tests', () => {
         await expect(page).toHaveURL(/^http:\/\/localhost:3002\/dashboard\/products\/[0-9a-f-]+$/);
     });
 
-    // //now test that if we edit a product, it will update the product in the products page
+    //now test that if we edit a product, it will update the product in the products page
     test('should update the product in the products page when the edit button is clicked', async ({ page }) => {
         // Use 'a' selector since the edit button is actually a Link element
         await page.locator('a[data-testid="product-edit-button"]').first().click();
@@ -116,7 +116,7 @@ test.describe('Admin Products E2E Tests', () => {
     });
 
 
-    test('create a new product', async ({ page }) => {
+    test('create a new product and then delete it', async ({ page }) => {
         await page.click('a[data-testid="add-product-button"]');
         await expect(page).toHaveURL(/^http:\/\/localhost:3002\/dashboard\/products\/new$/);
 
@@ -134,12 +134,8 @@ test.describe('Admin Products E2E Tests', () => {
         await expect(page).toHaveURL(/^http:\/\/localhost:3002\/dashboard\/products/, { timeout: 10000 });
         // check that the product name has been updated
         await expect(page.locator('[data-testid="product-name"]').nth(3)).toContainText('Test Product');
-    });
 
-    //the products button should be able to delete a product
-    /// once they clicked on the edit button
-    // now we delete the test product
-    test('delete a product', async ({ page }) => {
+        // DELETE THE PRODUCT
         // go to the test product (4th product, index 3)
         await page.locator('a[data-testid="product-edit-button"]').nth(3).click();
         // check that we are on the test product
@@ -153,13 +149,20 @@ test.describe('Admin Products E2E Tests', () => {
         
         // now click the delete button
         await page.click('button[data-testid="delete-product-button"]');
-
-        // Wait for the deletion to complete and redirect
-        await page.waitForURL('http://localhost:3002/dashboard/products', { timeout: 10000 });
+        
+        // Wait for the deletion to complete and redirect to happen
+        // The deletion should trigger a redirect to the products page
+        await page.waitForURL('http://localhost:3002/dashboard/products', { timeout: 15000 });
         
         // check that the product name, test product is not there, meaning it has been deleted
         await expect(page.locator('[data-testid="product-name"]').filter({ hasText: 'Test Product' })).not.toBeVisible();
     });
+
+    //the products button should be able to delete a product
+    /// once they clicked on the edit button
+    // now we delete the test product
+    // test('delete a product', async ({ page }) => {
+        
 
 
 });

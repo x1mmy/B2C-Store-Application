@@ -94,8 +94,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
       }
       
       toast.success('Product deleted successfully');
-      router.refresh();
-      router.push('/dashboard/products');
+      router.replace('/dashboard/products');
     } catch (error) {
       console.error('Error deleting product:', error);
       toast.error('Failed to delete product. Please try again.');

@@ -24,6 +24,12 @@ async function fetchProduct(productId: string): Promise<Product | null> {
     .single();
   
   if (error) {
+    // Handle the case where product doesn't exist (e.g., after deletion)
+    if (error.code === 'PGRST116') {
+      // Product not found - this is expected after deletion
+      return null;
+    }
+    // Only log other types of errors
     console.error('Error fetching product:', error);
     return null;
   }
