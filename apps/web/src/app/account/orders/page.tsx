@@ -86,7 +86,7 @@ export default function OrdersPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6 text-black">Your Orders</h1>
+          <h1 className="text-3xl font-bold mb-6 text-white">Your Orders</h1>
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
