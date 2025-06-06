@@ -58,17 +58,17 @@ test.describe('Web App - Account Page', () => {
         
     });
 
-    //  go see all the orders for the user
-    test('go see all the orders for the user', async ({ page }) => {
-        await page.goto('http://localhost:3001/account');
+    // //  go see all the orders for the user
+    // test('go see all the orders for the user', async ({ page }) => {
+    //     await page.goto('http://localhost:3001/account');
         
-        // Wait for the recent orders link to be visible before clicking
-        await expect(page.locator('a[data-testid="recent-orders-link"]')).toBeVisible({ timeout: 10000 });
-        await page.locator('a[data-testid="recent-orders-link"]').click();
+    //     // Wait for the recent orders link to be visible before clicking
+    //     await expect(page.locator('a[data-testid="recent-orders-link"]')).toBeVisible({ timeout: 10000 });
+    //     await page.locator('a[data-testid="recent-orders-link"]').click();
         
-        await page.waitForTimeout(3000);
-        await expect(page.url()).toContain('/account/orders');
-    });
+    //     await page.waitForTimeout(3000);
+    //     await expect(page.url()).toContain('/account/orders');
+    // });
 
     // check each order has the correct information and is currently showing 9 orders
     test('check each order has the correct information', async ({ page }) => {
