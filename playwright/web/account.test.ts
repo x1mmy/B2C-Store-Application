@@ -69,11 +69,15 @@ test.describe('Web App - Account Page', () => {
     // check each order has the correct information and is currently showing 9 orders
     test('check each order has the correct information', async ({ page }) => {
         await page.goto('http://localhost:3001/account/orders');
-        await page.waitForTimeout(3000);
         await expect(page.url()).toContain('/account/orders');
         
-        // Check we have 1 or more orders total
+        // Wait for the orders page to load and show orders
         const orderCards = page.locator('div.bg-white.rounded-lg.shadow-md');
+        
+        // Wait for at least one order to appear (with a reasonable timeout)
+        await expect(orderCards.first()).toBeVisible({ timeout: 10000 });
+        
+        // Check we have 1 or more orders total
         const orderCount = await orderCards.count();
         expect(orderCount).toBeGreaterThanOrEqual(1);
         
