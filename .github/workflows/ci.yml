@@ -91,7 +91,7 @@ jobs:
       run: |
         cd apps/web
         pnpm start &
-        sleep 10
+        sleep 15
         
     - name: Start admin server
       env:
@@ -103,12 +103,14 @@ jobs:
       run: |
         cd apps/admin
         pnpm start &
-        sleep 10
+        sleep 15
         
     - name: Wait for servers to be ready
       run: |
-        npx wait-on http://localhost:3001 --timeout 60000
-        npx wait-on http://localhost:3002 --timeout 60000
+        npx wait-on http://localhost:3001 --timeout 120000
+        npx wait-on http://localhost:3002 --timeout 120000
+        # Additional wait to ensure database connections are established
+        sleep 10
       
     - name: Run E2E tests
       env:
