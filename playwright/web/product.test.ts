@@ -149,8 +149,10 @@ test.describe('Web App - Product Page', () => {
         // now we go to the checkout page
         await page.locator('button[data-testid="checkout-button"]').click();
 
-        // wait for redirect to Stripe checkout page
-        await page.waitForURL('**/checkout.stripe.com/**', { timeout: 10000 });
+        // wait for redirect to Stripe checkout page - check if already there first
+        if (!page.url().includes('checkout.stripe.com')) {
+            await page.waitForURL('**/checkout.stripe.com/**', { timeout: 15000 });
+        }
 
         // now we should be on the checkout page hosted by stripe
         await expect(page.url()).toContain('checkout.stripe.com');
@@ -214,6 +216,7 @@ test.describe('Web App - Product Page', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // Include cookies for authentication
                 body: JSON.stringify(orderData)
             });
             const result = await response.json();
