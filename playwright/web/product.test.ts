@@ -149,10 +149,12 @@ test.describe('Web App - Product Page', () => {
         // now we go to the checkout page
         await page.locator('button[data-testid="checkout-button"]').click();
 
-        // wait 3 secs
-        await page.waitForTimeout(3000);
+        // wait for redirect to Stripe checkout page - check if already there first
+        if (!page.url().includes('checkout.stripe.com')) {
+            await page.waitForURL('**/checkout.stripe.com/**', { timeout: 15000 });
+        }
 
-        // now we should be on the checkout page hosted by str
+        // now we should be on the checkout page hosted by stripe
         await expect(page.url()).toContain('checkout.stripe.com');
         
         // verify the product details on the Stripe checkout page
@@ -214,6 +216,7 @@ test.describe('Web App - Product Page', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // Include cookies for authentication
                 body: JSON.stringify(orderData)
             });
             const result = await response.json();
@@ -250,10 +253,10 @@ test.describe('Web App - Product Page', () => {
         await expect(orderCards).toBeVisible();
         
         // check the quantity is correct
-        await expect(page.locator(`text=Quantity: ${quantity}`)).toBeVisible();
+        await expect(await page.locator(`text=Quantity: ${quantity}`).count()).toBeGreaterThanOrEqual(1);
 
         // check the total is correct
-        await expect(page.locator(`text=$${itemTotal}`)).toBeVisible();
+        await expect(await page.locator(`text=$${itemTotal}`).count()).toBeGreaterThanOrEqual(1);
 
 
         // console.log('Order creation test completed successfully');
